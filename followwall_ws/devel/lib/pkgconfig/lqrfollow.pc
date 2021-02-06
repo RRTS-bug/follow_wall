@@ -1,0 +1,8 @@
+prefix=/home/czp/followwall_ws/devel
+
+Name: lqrfollow
+Description: Description of lqrfollow
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

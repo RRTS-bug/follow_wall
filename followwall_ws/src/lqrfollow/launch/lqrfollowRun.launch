@@ -1,0 +1,64 @@
+<launch>
+  <arg name="topic1"    default = "/front/scan"/>
+
+  <arg name="topic2" default = "/odometry/filtered" />
+
+  <arg name="topic3" default = "/cmd_vel" />
+  
+  <node pkg = "lqrfollow" type = "followmain.py" name = "followwall"/>
+    
+    <!-- vehicle and 2D laser param -->
+    <!--激光传感器的最大测量角度 -->
+    <param name="sensorAngleMax" type="double" value=" 2.35619" /> 
+    <!--激光传感器的最小测量角度 -->
+    <param name="sensorAngleMin" type="double" value=" -2.35619" />
+    <!--激光传感器的测量角度分辨率 -->
+    <param name="sensorAngleReso" type="double" value="0.01745319" />
+    <!--提取的有效数据开始角度 -->
+    <param name="followAngleS" type="double" value=" -2.35619" />
+    <!--提取的有效数据结束角度 -->
+    <param name="followAngleE" type="double" value="0.523598" />
+    <!--移动机器人最大行驶加速度 -->
+    <param name="maxAcc" type="double" value="0.2" />
+     <!--当传感器探测距离小于此值，才会纳入计算中 -->
+    <param name="adjacentRange" type="double" value="4.0" />
+    <!--移动机器人最大行驶速度 -->
+    <param name="maxLinearSpeed" type="double" value="0.5" />
+    <!--移动机器人最小行驶速度 -->
+    <param name="minLinearSpeed" type="double" value="0.0" />
+    <!--移动机器人最大行驶角速度 -->
+    <param name="maxAngularSpeed" type="double" value="0.78"/>
+
+    <param name="dt" type="double" value="0.1"/>
+
+    <!--follow param -->
+    <!--固定跟随距离-->
+    <param name="followdist" type="double" value="1.0"/>
+    <!--引导距离-->
+    <param name="lookAHeadDist" type="double" value="0.3"/>
+    <!--跟随精度-->
+    <param name="precision" type="double" value="0.01" />
+    <!--跟随左侧墙，还是右侧，左侧：0,右侧：1-->
+    <param name="followside" type="int" value="0"/>
+    <!--线速度控制量的表达式系数，文档2.0中4的lqr控制表达式-->
+    <param name="kv" type="double" value="1.0"/>
+
+    <!--fit param -->
+    <!--滑动窗宽度-->
+    <param name="sidewindowlen" type="int" value="5" />
+    <!--直线拟合阈值-->
+    <param name="fitThreshold" type="double" value="0.05" />
+    
+    <param name="orphansNum" type="int" value="4" />
+    <!--直线拟合阈值-->
+    <param name="orphansdist" type="double" value="0.4" />
+
+    <!-- topic-->
+    <param name="scan_topic"    value="$(arg topic1)"/>
+
+    <param name="odom_topic" value="$(arg topic2)"/>
+
+    <param name="cmd_topic" value="$(arg topic3)"/>
+
+</launch>
+

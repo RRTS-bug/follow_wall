@@ -1,0 +1,13 @@
+<launch>
+  <arg name="topic1"    default = "/trajectory"/>
+
+  <node pkg = "pathfilter" type = "pathfiltermain.py" name = "path"/>
+    <!--栅格地图栅格大小-->
+    <param name="mapGridSize"  type="double" value="0.02" /> 
+    <!--栅格滤波阈值 -->
+    <param name="gridNumThres" type="int" value="5" />
+    <!--直线拟合阈值-->
+    <param name="fitThreshold" type="double" value="0.02" />
+    <!--发布的话题名称-->
+    <param name="trajectory_topic"    value="$(arg topic1)"/>
+</launch>

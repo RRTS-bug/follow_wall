@@ -1,0 +1,2 @@
+lqrfollow:pathfilter:pathfollow
+-DCATKIN_DEVEL_PREFIX=/home/czp/followwall_ws/devel -DCMAKE_INSTALL_PREFIX=/home/czp/followwall_ws/install -G Unix Makefiles

@@ -1,0 +1,54 @@
+<launch>
+  <arg name="topic1"    default = "/trajectory"/>
+
+  <arg name="topic2" default = "/cmd_vel" />
+
+  <arg name="topic3" default = "/odometry/filtered" />
+
+  <arg name="topic4" default = "/targetpoint" />
+  
+  <node pkg = "pathfollow" type = "pathfollow.py" name="pathfollow"/>
+     <!--文档公式22中公式(2)中k1-->
+     <param name="k1" type="double" value="1.0" />
+     <!--文档公式22中公式(3)中k2-->
+     <param name="k2" type="double" value="2.0" />
+     <!--文档公式22中公式(3)中lmde-->
+     <param name="lmde" type="double" value="1.0" />
+     <!--文档公式16中fairA-->
+     <param name="fairA" type="double" value="0.2316" />
+     <!--文档公式16中ktheta-->
+     <param name="ktheta" type="double" value="1.0" />
+     <!--轨迹目标点在轨迹点列表中的索引-->
+     <param name="targetindex" type="int" value="0" />
+     <!--轨迹插值之后的轨迹点数量-->
+     <param name="sampleNum" type="int" value="1000" />
+     <!--初始趋近角-->
+     <param name="initCloserAngle" type="double" value="0.0" />
+
+     <param name="linearSpeedDesire" type="double" value="0.5" />
+
+     <param name="inittargetSpeed" type="double" value="0.0" />
+
+     <param name="maxLinearSpeed" type="double" value="0.5" />
+
+     <param name="minLinearSpeed" type="double" value="0.0" />
+
+     <param name="maxAcc" type="double" value="0.5" />
+
+     <param name="maxAngularSpeed" type="double" value="0.78" />
+
+     <param name="initrobotX" type="double" value="0.0" />
+
+     <param name="initrobotY" type="double" value="0.0" />
+
+     <param name="initrobotAngle" type="double" value="0.0" />
+
+     <param name="path_topic"    value ="$(arg topic1)"/>
+
+     <param name="cmd_vel_topic" value ="$(arg topic2)"/>
+
+     <param name="odom_topic" value ="$(arg topic3)"/>
+
+     <param name="targetpoint_topic" value ="$(arg topic4)"/>
+
+</launch>
