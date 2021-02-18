@@ -12,26 +12,26 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 
 class Fox(object):
-    def __init__(self,param,vehicleParam):
-        self.dt = param['dt']
-        self.k1 = param['k1']
-        self.k2 = param['k2']
-        self.lmde = param['lmde']
-        self.faiA = param['fairA']
-        self.ktheta = param['ktheta']
-        self.targetindex = param['targetindex']
-        self.sampleNum = param['sampleNum']
-        self.initCloserAngle = param['initCloserAngle']
-        self.linearSpeedDesire = param['linearSpeedDesire']
+    def __init__(self):
+        self.dt = rospy.get_param("dt")
+        self.k1 = rospy.get_param("k1")
+        self.k2 = rospy.get_param("k2")
+        self.lmde = rospy.get_param("lmde")
+        self.fairA = rospy.get_param("fairA")
+        self.ktheta = rospy.get_param("ktheta")
+        self.targetindex = rospy.get_param("targetindex")
+        self.sampleNum = rospy.get_param("sampleNum")
+        self.initCloserAngle = rospy.get_param("initCloserAngle")
+        self.linearSpeedDesire = rospy.get_param("linearSpeedDesire")
         self.closerAnglelist = [self.initCloserAngle]
-        self.lasttargetSpeed = param['inittargetSpeed']
+        self.lasttargetSpeed = rospy.get_param("inittargetSpeed")
         self.gettrajectory()
         self.getCurvature()
-        self.maxLinearSpeed = vehicleParam['maxLinearSpeed']  ##移动机器人最大行驶速度
-        self.minLinearSpeed = vehicleParam['minLinearSpeed']  ##移动机器人最小行驶速度
-        self.maxAcc = vehicleParam['maxAcc']  ##移动机器人最大加速度
+        self.maxLinearSpeed = rospy.get_param("maxLinearSpeed")  ##移动机器人最大行驶速度
+        self.minLinearSpeed = rospy.get_param("minLinearSpeed")  ##移动机器人最小行驶速度
+        self.maxAcc = rospy.get_param("maxAcc")  ##移动机器人最大加速度
         self.minAcc = -self.maxAcc
-        self.maxAngularSpeed = vehicleParam['maxAngularSpeed']  ##移动机器人最大角速度
+        self.maxAngularSpeed = rospy.get_param("maxAngularSpeed")  ##移动机器人最大角速度
         self.minAngluarSpeed = -self.maxAngularSpeed
         self.lastlinearSpeed = 0
         self.lastrobotX = 0
@@ -39,12 +39,12 @@ class Fox(object):
     
     def gettrajectory(self):
         path_topic = rospy.get_param('path_topic')
-        msg = rospy.wait_for_message('/trajectory', Traj)
+        msg = rospy.wait_for_message(path_topic, Traj)
         self.trajectory = [[msg.trajectoryX[i],msg.trajectoryY[i]] for i in range(len(msg.trajectoryX))]
 
     def getodom(self):
         odom_topic = rospy.get_param('odom_topic')
-        odom = rospy.wait_for_message('/odometry/filtered', Odometry)
+        odom = rospy.wait_for_message(odom_topic, Odometry)
         x = odom.pose.pose.orientation.x
         y = odom.pose.pose.orientation.y
         z = odom.pose.pose.orientation.z
@@ -92,7 +92,7 @@ class Fox(object):
     ##获取趋近角(文档公式16)
     def getcloserAngle(self,linearSpeed):
         signu = np.sign(linearSpeed)
-        self.closerAngle = - signu * self.faiA * (math.exp(2 * self.ktheta * self.sfY) - 1) / (math.exp(2 * self.ktheta * self.sfY) + 1)
+        self.closerAngle = - signu * self.fairA * (math.exp(2 * self.ktheta * self.sfY) - 1) / (math.exp(2 * self.ktheta * self.sfY) + 1)
         self.firstOrderCA = (self.closerAngle - self.closerAnglelist[-1]) / self.dt
         self.closerAnglelist.append(self.closerAngle)
     ##根据控制量表达式获取控制量(文档公式22)
@@ -170,32 +170,9 @@ class Fox(object):
 def main():
     rospy.init_node('pathfollow')
     ##获取参数
-    k1 = rospy.get_param("k1")
-    k2 = rospy.get_param("k2")
-    lmde = rospy.get_param("lmde")
-    fairA = rospy.get_param("fairA")
-    ktheta = rospy.get_param("ktheta")
-    targetindex = rospy.get_param("targetindex")
-    sampleNum = rospy.get_param("sampleNum")
-    initCloserAngle = rospy.get_param("initCloserAngle")
-    linearSpeedDesire = rospy.get_param("linearSpeedDesire")
-    inittargetSpeed = rospy.get_param("inittargetSpeed")
-    maxLinearSpeed = rospy.get_param("maxLinearSpeed")
-    minLinearSpeed = rospy.get_param("minLinearSpeed")
-    maxAcc = rospy.get_param("maxAcc")
-    maxAngularSpeed = rospy.get_param("maxAngularSpeed")
-    param = {'dt':0.2,'k1':k1,'k2':k2,'lmde':lmde,'fairA':fairA,'ktheta':ktheta,'targetindex':targetindex,'sampleNum':sampleNum,'initCloserAngle':initCloserAngle,
-                    'linearSpeedDesire':linearSpeedDesire,'inittargetSpeed':inittargetSpeed}
-    vehicleparam = {'maxLinearSpeed': maxLinearSpeed , 'minLinearSpeed':minLinearSpeed, 'maxAcc': maxAcc,'maxAngularSpeed':maxAngularSpeed}
-    
     cmd_vel_topic = rospy.get_param('cmd_vel_topic')
     cmd_pub = rospy.Publisher(cmd_vel_topic, Twist, queue_size = 1)
-    
-    targetPoint_topic = rospy.get_param('targetpoint_topic')
-    point_pub = rospy.Publisher(targetPoint_topic,TargetPoint)
-    
-    fox = Fox(param,vehicleparam)
-    
+    fox = Fox()
     robotX = rospy.get_param('initrobotX')
     robotY = rospy.get_param('initrobotY')
     robotAngle = rospy.get_param('initrobotAngle')
@@ -209,16 +186,8 @@ def main():
         twist.linear.x = linearSpeed
         twist.angular.z = angularSpeed
         cmd_pub.publish(twist)
-
-        targetpoint = TargetPoint()
-        targetpoint.targetPointx = fox.traj[fox.targetindex][0]
-        targetpoint.targetPointy = fox.traj[fox.targetindex][1]
-        point_pub.publish(targetpoint)
-        
         e1 = time.time()
         fox.dt = e1 - s1
-        #plt.pause(0.001)
-    #plt.show()
 if __name__ == '__main__':
     main()
 
