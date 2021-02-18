@@ -9,9 +9,9 @@ from pathfilter.msg import Traj
 import matplotlib.pyplot as plt
 class Pathfilter(object):
     def __init__(self):
-        self.mapGridSize = 0.02
-        self.gridNumThres = 5
-        self.fitThreshold = 0.02
+        self.mapGridSize = rospy.get_param("mapGridSize")
+        self.gridNumThres = rospy.get_param("gridNumThres")
+        self.fitThreshold = rospy.get_param("fitThreshold")
     ##求点到线段的距离
     def calPointToLineDis(self, poi, poi1, poi2):
         cross = (poi2[0] - poi1[0]) * (poi[0] - poi1[0]) + (poi2[1] - poi1[1]) * (poi[1] - poi1[1])
@@ -124,9 +124,7 @@ class Pathfilter(object):
         return pathfit
 def main():
     rospy.init_node('path', anonymous=True)
-    mapGridSize = rospy.get_param("mapGridSize")
-    gridNumThres = rospy.get_param("gridNumThres")
-    fitThreshold = rospy.get_param("fitThreshold")
+
     ##初始化参数
     pf = Pathfilter()
     ##读取全局路径
