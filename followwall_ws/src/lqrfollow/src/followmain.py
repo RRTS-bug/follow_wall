@@ -11,20 +11,29 @@ import fitsec as fs
 import localpath as lp
 import robotcontrol as rc
 class Follow():
-    def __init__(self,vehicleParam):
-        self.sensorAngleMax = vehicleParam['sensorAngleMax']   ##激光传感器的最大测量角度
-        self.sensorAngleMin = vehicleParam['sensorAngleMin']   ##激光传感器的最小测量角度
-        self.sensorAngleReso = vehicleParam['sensorAngleReso'] ##激光传感器的角分辨率
-        self.followAngleS = vehicleParam['followAngleS']       ##提取的有效数据开始角度
-        self.followAngleE = vehicleParam['followAngleE']       ##提取的有效数据结束角度
-        self.maxLinearSpeed = vehicleParam['maxLinearSpeed']   ##移动机器人最大行驶速度
-        self.minLinearSpeed = vehicleParam['minLinearSpeed']   ##移动机器人最小行驶速度
-        self.maxAcc = vehicleParam['maxAcc']                   ##移动机器人最大加速度
+    def __init__(self):
+        self.maxAcc = rospy.get_param("maxAcc")                   ##移动机器人最大加速度
         self.minAcc = -self.maxAcc
-        self.adjacentRange = vehicleParam['adjacentRange']     ##进行计算的传感器探测距离最大值
-        self.maxAngularSpeed = vehicleParam['maxAngularSpeed'] ##移动机器人最大角速度
+        self.dt = rospy.get_param("dt")                          ##采样时间
+        self.kv = rospy.get_param("kv")
+        self.sensorAngleMax = rospy.get_param("sensorAngleMax")   ##激光传感器的最大测量角度
+        self.sensorAngleMin = rospy.get_param("sensorAngleMin")   ##激光传感器的最小测量角度
+        self.sensorAngleReso = rospy.get_param("sensorAngleReso") ##激光传感器的角分辨率
+        self.followAngleS = rospy.get_param("followAngleS")    ##提取的有效数据开始角度
+        self.followAngleE = rospy.get_param("followAngleE")       ##提取的有效数据结束角度
+        self.maxLinearSpeed = rospy.get_param("maxLinearSpeed")   ##移动机器人最大行驶速度
+        self.minLinearSpeed = rospy.get_param("minLinearSpeed")   ##移动机器人最小行驶速度
+        self.adjacentRange = rospy.get_param("adjacentRange")     ##进行计算的传感器探测距离最大值
+        self.maxAngularSpeed = rospy.get_param("maxAngularSpeed") ##移动机器人最大角速度
         self.minAngluarSpeed = -self.maxAngularSpeed
-        self.dt = vehicleParam['dt']                           ##采样时间
+        self.followdist = rospy.get_param("followdist")
+        self.lookAHeadDist = rospy.get_param("lookAHeadDist")
+        self.precision = rospy.get_param("precision")
+        self.followside = rospy.get_param("followside")
+        self.sidewindowlen = rospy.get_param("sidewindowlen")
+        self.orphansNum = rospy.get_param("orphansNum")
+        self.fitThreshold = rospy.get_param("fitThreshold")
+        self.orphansdist = rospy.get_param("orphansdist")
         self.lastlinearSpeed = 0
         self.globalPointOrd = []
         self.robotlocate = []
@@ -130,38 +139,10 @@ def main():
     ##初始化节点
     rospy.init_node('followwall')
     ##读取launch文件的参数
-    sensorAngleMax =  rospy.get_param("sensorAngleMax")
-    sensorAngleMin =  rospy.get_param("sensorAngleMin")
-    sensorAngleReso = rospy.get_param("sensorAngleReso")
-    followAngleS = rospy.get_param("followAngleS")
-    followAngleE = rospy.get_param("followAngleE")
-    maxAcc = rospy.get_param("maxAcc")
-    adjacentRange = rospy.get_param("adjacentRange")
-    maxLinearSpeed = rospy.get_param("maxLinearSpeed")
-    minLinearSpeed = rospy.get_param("minLinearSpeed")
-    maxAngularSpeed = rospy.get_param("maxAngularSpeed")
-    dt = rospy.get_param("dt")
-    followdist = rospy.get_param("followdist")
-    lookAHeadDist = rospy.get_param("lookAHeadDist")
-    precision = rospy.get_param("precision")
-    followside = rospy.get_param("followside")
-    kv = rospy.get_param("kv")
-    sidewindowlen = rospy.get_param("sidewindowlen")
-    orphansNum = rospy.get_param("orphansNum")
-    fitThreshold = rospy.get_param("fitThreshold")
-    orphansdist = rospy.get_param("orphansdist")
     cml_topic = rospy.get_param("cmd_topic")
     cmd_pub = rospy.Publisher(cml_topic, Twist, queue_size=2) ##控制命令的发布话题
-
-    ##将参数放置到字典中
-    vehicleParam = {'maxLinearSpeed':maxLinearSpeed,'minLinearSpeed':minLinearSpeed,'maxAcc':maxAcc,'maxAngularSpeed': maxAngularSpeed,'dt':dt,'sensorAngleMax':sensorAngleMax,'sensorAngleMin':sensorAngleMin,'sensorAngleReso':sensorAngleReso,
-                    'followAngleS':followAngleS,'followAngleE':followAngleE,'adjacentRange':adjacentRange}
-
-    followParam = {'followdist':followdist,'lookAHeadDist':lookAHeadDist,'precision': precision,'followside':followside,'kv':kv}
-
-    fitParam = {'sidewindowlen': sidewindowlen,'fitThreshold': fitThreshold,'orphansNum':orphansNum,'orphansdist':orphansdist}
     ##类参数初始化
-    follow = Follow(vehicleParam)
+    follow = Follow()
     ##如果没有键盘中断，执行while循环，即跟墙。
     try:
         while True:
@@ -170,11 +151,11 @@ def main():
             ##读取移动机器人位置
             follow.getOdom()
             ##对原始数据进行拟合
-            sensorPointfit, tangentslope = fs.fitsec(follow.sensorPoint, fitParam['sidewindowlen'], fitParam['orphansNum'],fitParam['orphansdist'],fitParam['fitThreshold'], followParam['followside'])
+            sensorPointfit, tangentslope = fs.fitsec(follow.sensorPoint,follow.sidewindowlen, follow.orphansNum,follow.orphansdist,follow.fitThreshold,follow.followside)
             ##将拟合后的数据进行平行处理
-            normalPoint = lp.parallelsec(tangentslope, sensorPointfit, followParam['followdist'], followParam['precision'])
+            normalPoint = lp.parallelsec(tangentslope, sensorPointfit, follow.followdist, follow.precision)
             ##利用控制算法，生成角速度和线速度控制命令
-            linearSpeedCon, angularSpeedCon = rc.followFunc(normalPoint, sensorPointfit, follow.linearSpeed, follow.maxLinearSpeed, followParam['lookAHeadDist'], followParam['kv'], followParam['followdist'])
+            linearSpeedCon, angularSpeedCon = rc.followFunc(normalPoint, sensorPointfit, follow.linearSpeed, follow.maxLinearSpeed, follow.lookAHeadDist, follow.kv, follow.followdist)
             ##对生成控制执行进行check
             linearSpeedCon = follow.lineaSpeedcheck(linearSpeedCon)
             angularSpeedCon = follow.angularSpeedcheck(angularSpeedCon)
