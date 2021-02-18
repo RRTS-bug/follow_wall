@@ -8,6 +8,7 @@
   <arg name="topic4" default = "/targetpoint" />
   
   <node pkg = "pathfollow" type = "pathfollow.py" name="pathfollow"/>
+     <param name="dt" type="double" value="0.1" />
      <!--文档公式22中公式(2)中k1-->
      <param name="k1" type="double" value="1.0" />
      <!--文档公式22中公式(3)中k2-->
