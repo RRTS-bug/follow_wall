@@ -37,9 +37,6 @@ def bspline(trajectory,sampleNum):
     yBspline = interpolate.splev(ipl_t, y_tup)
     output = [[xBspline[i],yBspline[i]] for i in range(len(xBspline))]
     return output
-def readTargetPoint():
-    msg = rospy.wait_for_message('/targetpoint',TargetPoint)
-    return [msg.targetPointx,msg.targetPointy]
 
 def main():
     rospy.init_node('show')
@@ -51,11 +48,9 @@ def main():
     while not rospy.is_shutdown():
         plt.clf()
         robotX, robotY, robotAngle = getodom()
-        targetpoint = readTargetPoint()
         x.append(robotX)
         y.append(robotY)
         plt.plot(x,y,color = 'r')
-        plt.scatter(targetpoint[0], targetpoint[1], color = 'r')
         plt.plot(np.array(traj)[:, 0], np.array(traj)[:, 1], color = 'b')
         plt.pause(0.001)
     plt.show()
